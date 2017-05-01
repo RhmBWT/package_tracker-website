@@ -8,6 +8,9 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use app\models\TrackForm;
+use SoapClient;
+use SoapParam;
 
 class SiteController extends Controller
 {
@@ -121,5 +124,39 @@ class SiteController extends Controller
     public function actionAbout()
     {
         return $this->render('about');
+    }
+
+    /* Track check function */
+
+    public function actionTrack()
+    {
+        $model = new TrackForm();
+
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            // valid data received in $model
+            $wsdlurl = 'https://tracking.russianpost.ru/rtm34?wsdl';
+            $login = "DFgtYRUBIXFMVH";
+            $password = "HBvdxI61WWlM";
+
+            $client2 = new SoapClient($wsdlurl, array('trace' => 1, 'soap_version' => SOAP_1_2));
+
+            $params3 = array ('OperationHistoryRequest' => array ('Barcode' => $model->track, 'MessageType' => '0','Language' => 'RUS'),
+                'AuthorizationHeader' => array ('login'=>$login,'password'=>$password));
+
+            $model->result = $client2->getOperationHistory(new SoapParam($params3,'OperationHistoryRequest'));
+
+            /*foreach ($result->OperationHistoryData->historyRecord as $record) {
+                printf("<p>%s </br>  %s, %s</p>",
+                    $record->OperationParameters->OperDate,
+                    $record->AddressParameters->OperationAddress->Description,
+                    $record->OperationParameters->OperAttr->Name);
+            };*/
+            // do something meaningful here about $model ...
+
+            return $this->render('track-confirm', ['model' => $model]);
+        } else {
+            // either the page is initially displayed or there is some validation error
+            return $this->render('track', ['model' => $model]);
+        }
     }
 }
