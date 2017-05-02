@@ -46,6 +46,9 @@ $config = [
             ],
         ],
         */
+        'formatter' => [
+            'timeZone' => 'UTC',
+        ],
     ],
     'params' => $params,
 ];
